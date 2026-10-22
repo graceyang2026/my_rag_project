@@ -92,17 +92,18 @@ def ask_rag(query: str):
         }
     
     try:
-        # 在这里加上 proxies 参数，强制不走代理直接连本地
-        response = requests.post(
-            "http://localhost:11434/api/generate", 
-            json=payload, 
+        session = requests.Session()
+        session.trust_env = False
+        response = session.post(
+            "http://localhost:11434/api/chat",
+            json=payload,
             timeout=60,
-            proxies={"http": None, "https": None}  # <-- 把这行加进来
         )
         if response.status_code == 200:
-            answer = response.json().get("response", "生成失败")
+            answer = response.json().get("message", {}).get("content", "生成失败")
             return answer, references
         else:
-            return f"⚠️ Ollama 报错 [状态码: {response.status_code}]", []
-    except Exception as e:
+            detail = response.text.strip() or response.reason
+            return f"⚠️ Ollama 报错 [状态码: {response.status_code}]: {detail}", []
+    except requests.RequestException as e:
         return f"⚠️ 连接异常: {str(e)}", []

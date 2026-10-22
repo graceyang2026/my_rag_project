@@ -56,18 +56,40 @@ def ask_rag(query: str):
 
     # 3. 组装 Prompt 调用本地 Ollama
     context_str = "\n".join(top_texts)
-    system_prompt = (
-        "你是一个严谨的企业知识库智能助手。请严格根据提供的参考上下文回答用户问题。\n"
-        "如果上下文中没有包含相关答案，请直接回答“根据现有知识库，未找到相关内容”，严禁胡乱编造（幻觉）。"
-    )
-    user_prompt = f"参考以下内容回答：\n{context_str}\n\n问题：{query}"
+    # system_prompt = (
+    #     "你是一个严谨的企业知识库智能助手。请严格根据提供的参考上下文回答用户问题。\n"
+    #     "如果上下文中没有包含相关答案，请直接回答“根据现有知识库，未找到相关内容”，严禁胡乱编造（幻觉）。"
+    # )
+    # user_prompt = f"参考以下内容回答：\n{context_str}\n\n问题：{query}"
     
+    # payload = {
+    #     "model": "qwen2.5:7b",
+    #     "prompt": f"System: {system_prompt}\n\nUser: {user_prompt}\n\nAssistant:",
+    #     "stream": False,
+    #     "options": {"temperature": 0.1}
+    # }
+
+
     payload = {
-        "model": "qwen2.5:7b",
-        "prompt": f"System: {system_prompt}\n\nUser: {user_prompt}\n\nAssistant:",
-        "stream": False,
-        "options": {"temperature": 0.1}
-    }
+            "model": "qwen2.5:7b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "你是一个严谨的企业知识库智能助手。请严格根据提供的参考上下文回答用户问题。\n"
+                        "【特别提示】：参考上下文中包含《权限与功能控制矩阵》等表格。系统管理员 (Admin) 仅负责账号和权限管理，"
+                        "在供应商档案的“新增/编辑”操作上权限为无（✕），原则上不参与业务数据的新增、修改及审批。\n"
+                        "如果上下文中没有包含相关答案，请直接回答“根据现有知识库，未找到相关内容”，严禁胡乱编造。"
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"【参考上下文】\n{context_str}\n\n【用户问题】\n{query}"
+                }
+            ],
+            "stream": False,
+            "options": {"temperature": 0.1}
+        }
     
     try:
         # 在这里加上 proxies 参数，强制不走代理直接连本地
